@@ -132,7 +132,9 @@ lin_reg = LinearRegression()
 lin_reg.fit(X_poly, y)
 lin_reg.intercept_, lin_reg.coef_
 
+#---------------------------------------------------
 # evaluate the model's generalization performance 
+#---------------------------------------------------
 from sklearn.metrics import mean_squared_error 
 from sklearn.model_selection import train_test_split 
 def plot_learning_curves(model, X, y):    
@@ -149,4 +151,22 @@ def plot_learning_curves(model, X, y):
 
 
 lin_reg = LinearRegression()
-plot_learning_curves(lin_reg, X, y)        
+plot_learning_curves(lin_reg, X, y)  
+
+# learning curve of 10th degree polynomial model on same data
+from sklearn.pipeline import Pipeline
+
+polynomial_regression = Pipeline([("poly_features", PolynomialFeatures(degree=10, include_bias=False)), ("lin_reg", LinearRegression()),])
+plot_learning_curves(polynomial_regression, X, y)      
+
+
+#Ridge Regression 
+from sklearn.linear_model import Ridge
+ridge_reg = Ridge(alpha=1, solver="cholesky")
+ridge_reg.fit(X, y)
+ridge_reg.predict([[1.5]])
+
+#Stochastic Gradient Descent 
+sgd_reg = SGDRegressor(penalty="12")
+sgd_reg.fit(X, y.ravel())
+sgd_reg.predict([[1.5]])
