@@ -170,3 +170,25 @@ ridge_reg.predict([[1.5]])
 sgd_reg = SGDRegressor(penalty="12")
 sgd_reg.fit(X, y.ravel())
 sgd_reg.predict([[1.5]])
+
+#Build classifier to detect Iris-Virginia type 
+from sklearn import datasets
+iris = datasets.load_iris()
+iris
+list(iris.keys())
+X = iris["data"][:, 3:] #iris["data"] returns matrix. [:,3:] all rows and column from 3 until end column
+X
+y = (iris["target"] == 2).astype(np.int) #astype : 
+y
+
+from sklearn.linear_model import LogisticRegression
+log_reg = LogisticRegression()
+log_reg.fit(X, y)
+
+X_new = np.linspace(0, 3, 1000).reshape(-1,1)
+X_new
+y_proba = log_reg.predict_proba(X_new)
+plt.plot(X_new, y_proba[:,1], "g-", label="Iris-Virginica")
+plt.plot(X_new, y_proba[:,0], "b--", label="Not Iris-Virginica")
+
+log_reg.predict([[1.7], [1.5]])
