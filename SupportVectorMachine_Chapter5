@@ -50,3 +50,170 @@ poly_kernel_svm_clf = Pipeline([
         ("svm_clf", SVC(kernel="poly", degree=3, coef0=1, C=5))
         ])
 poly_kernel_svm_clf.fit(X,y)
+
+#-----------------------------------------------
+# Gaussian RBF (Radical Basis Function) Kernel
+#-----------------------------------------------
+rbf_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="rbf", gamma=5, C=0.001))
+        ])
+
+rbf_kernel_svm_clf.fit(X,y)
+
+#----------------
+# SVM Regression
+#----------------
+from sklearn.svm import LinearSVR
+svm_reg = LinearSVR(epsilon=1.5)
+svm_reg.fit(X,y)
+
+
+#---------------------
+# load iris dataset
+#---------------------
+from sklearn import datasets
+iris = datasets.load_iris() 
+X = iris["data"][:, (2,3)] #petal length, petal width
+y = iris["target"]
+X
+y
+setosa_or_versicolor = (y == 0) | (y == 1) #if y == 0 or y == 1 then true otherwise false
+setosa_or_versicolor #this plays like filter
+X = X[setosa_or_versicolor] #from original X, get only true indexed value 
+X
+y = y[setosa_or_versicolor]
+y
+
+
+from sklearn.svm import SVC, LinearSVC
+from sklearn.linear_model import SGDClassifier
+from sklearn.preprocessing import StandardScaler
+
+C = 5
+alpha = 1 / (C * len(X))
+
+lin_clf = LinearSVC(loss="hinge", C=C, random_state=42)
+svm_clf = SVC(kernel="linear", C=C)
+sgd_clf = SGDClassifier(loss="hinge", learning_rate="constant", eta0=0.001, alpha=alpha,
+                        n_iter=100000, random_state=42)
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+lin_clf.fit(X_scaled, y)
+svm_clf.fit(X_scaled, y)
+sgd_clf.fit(X_scaled, y)
+
+print("LinearSVC:                   ", lin_clf.intercept_, lin_clf.coef_)
+print("SVC:                         ", svm_clf.intercept_, svm_clf.coef_)
+print("SGDClassifier(alpha={:.5f}):".format(sgd_clf.alpha), sgd_clf.intercept_, sgd_clf.coef_)
+
+# Compute the slope and bias of each decision boundary
+w1 = -lin_clf.coef_[0, 0]/lin_clf.coef_[0, 1]
+b1 = -lin_clf.intercept_[0]/lin_clf.coef_[0, 1]
+w2 = -svm_clf.coef_[0, 0]/svm_clf.coef_[0, 1]
+b2 = -svm_clf.intercept_[0]/svm_clf.coef_[0, 1]
+w3 = -sgd_clf.coef_[0, 0]/sgd_clf.coef_[0, 1]
+b3 = -sgd_clf.intercept_[0]/sgd_clf.coef_[0, 1]
+
+# Transform the decision boundary lines back to the original scale
+line1 = scaler.inverse_transform([[-10, -10 * w1 + b1], [10, 10 * w1 + b1]])
+line2 = scaler.inverse_transform([[-10, -10 * w2 + b2], [10, 10 * w2 + b2]])
+line3 = scaler.inverse_transform([[-10, -10 * w3 + b3], [10, 10 * w3 + b3]])
+
+# Plot all three decision boundaries
+plt.figure(figsize=(11, 4))
+plt.plot(line1[:, 0], line1[:, 1], "k:", label="LinearSVC")
+plt.plot(line2[:, 0], line2[:, 1], "b--", linewidth=2, label="SVC")
+plt.plot(line3[:, 0], line3[:, 1], "r-", label="SGDClassifier")
+plt.plot(X[:, 0][y==1], X[:, 1][y==1], "bs") # label="Iris-Versicolor"
+plt.plot(X[:, 0][y==0], X[:, 1][y==0], "yo") # label="Iris-Setosa"
+plt.xlabel("Petal length", fontsize=14)
+plt.ylabel("Petal width", fontsize=14)
+plt.legend(loc="upper center", fontsize=14)
+plt.axis([0, 5.5, 0, 2])
+
+plt.show()
+
+#---------------------------------------------------------
+# Train and fine tune a Decision Tree for Moons dataset
+#---------------------------------------------------------
+from sklearn.datasets import make_moons 
+X, y = make_moons(n_samples=10000, noise=0.4, random_state=42)
+X
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train
+X_test
+y_train
+y_test
+
+type(X_train)
+len(X_train)
+len(X_test)
+
+from sklearn.model_selection import GridSearchCV
+from sklearn.tree import DecisionTreeClassifier
+
+params = {'max_leaf_nodes':list(range(2,100)), 'min_samples_split':[2,3,4]}
+grid_search_cv = GridSearchCV(DecisionTreeClassifier(random_state=42), params, n_jobs=-1, verbose=1)
+grid_search_cv.best_estimator_
+params
+grid_search_cv.fit(X_train, y_train)
+
+from sklearn.metrics import accuracy_score
+y_pred = grid_search_cv.predict(X_test)
+accuracy_score(y_test, y_pred)
+y_pred
+
+#---------------
+# grow forest 
+#---------------
+from sklearn.model_selection import ShuffleSplit 
+n_trees = 1000
+n_instances = 100
+mini_sets = []
+
+rs = ShuffleSplit(n_splits=n_trees, test_size=len(X_train) - n_instances, random_state=42)
+rs
+rs.split(X_train)
+for mini_train_index, mini_test_index in rs.split(X_train) : 
+    X_mini_train = X_train[mini_train_index]
+    #print(X_mini_train)
+    y_mini_train = y_train[mini_train_index]
+    mini_sets.append((X_mini_train, y_mini_train))
+
+mini_sets[0]
+type(mini_sets)
+    
+from sklearn.base import clone #clone is to construct a new estimator with the same parameters
+forest = [clone(grid_search_cv.best_estimator_) for _ in range(n_trees)] #this is list comprehension which is concise way to create list
+#it is equivalent to following
+# forest = []
+# for i in range(n_trees) : 
+#     forest.append(clone(grid_search_cv.best_estimator_))
+
+type(forest)
+accuracy_scores = []
+
+for tree, (X_mini_train, y_mini_train) in zip(forest, mini_sets):
+    tree.fit(X_mini_train, y_mini_train)    
+    
+    y_pred = tree.predict(X_test)
+    accuracy_scores.append(accuracy_score(y_test, y_pred))
+   
+np.mean(accuracy_scores)  
+
+Y_pred = np.empty([n_trees, len(X_test)], dtype=np.uint8 )  
+
+for tree_index, tree in enumerate(forest):
+    Y_pred[tree_index] = tree.predict(X_test)
+    
+from scipy.stats import mode # mode return the most common data point from discrete or normal data
+
+y_pred_majority_votes, n_votes = mode(Y_pred, axis=0)
+
+accuracy_score(y_test, y_pred_majority_votes.reshape([-1]))
+
