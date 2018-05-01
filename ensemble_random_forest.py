@@ -151,28 +151,42 @@ print(accuracy_score(y_test, y_pred_tree))
 from matplotlib.colors import ListedColormap
 
 def plot_decision_boundary(clf, X, y, axes=[-1.5, 2.5, -1, 1.5], alpha=0.5, contour=True):
-    x1s = np.linspace(axes[0], axes[1], 100)
+    x1s = np.linspace(axes[0], axes[1], 100) #Return evenly spaced numbers over a specified interval.
     x2s = np.linspace(axes[2], axes[3], 100)
-    x1, x2 = np.meshgrid(x1s, x2s)
-    X_new = np.c_[x1.ravel(), x2.ravel()]
+    x1, x2 = np.meshgrid(x1s, x2s) #Return coordinate matrices from coordinate vectors.
+    X_new = np.c_[x1.ravel(), x2.ravel()] #Translates slice objects to concatenation along the second axis.
     y_pred = clf.predict(X_new).reshape(x1.shape)
     custom_cmap = ListedColormap(['#fafab0','#9898ff','#a0faa0'])
-    plt.contourf(x1, x2, y_pred, alpha=0.3, cmap=custom_cmap, linewidth=10)
+    plt.contourf(x1, x2, y_pred, alpha=0.3, cmap=custom_cmap, linewidth=10) #contourf : contour() and contourf() draw contour lines and filled contours, respectively. Except as noted, function signatures and return values are the same for both versions.
     if contour:
         custom_cmap2 = ListedColormap(['#7d7d58','#4c4c7f','#507d50'])
         plt.contour(x1, x2, y_pred, cmap=custom_cmap2, alpha=0.8)
-    plt.plot(X[:, 0][y==0], X[:, 1][y==0], "yo", alpha=alpha)
+    plt.plot(X[:, 0][y==0], X[:, 1][y==0], "yo", alpha=alpha) #Plot y versus x as lines and/or markers.
     plt.plot(X[:, 0][y==1], X[:, 1][y==1], "bs", alpha=alpha)
     plt.axis(axes)
     plt.xlabel(r"$x_1$", fontsize=18)
     plt.ylabel(r"$x_2$", fontsize=18, rotation=0)     
 
 plt.figure(figsize=(11,4))
-plt.subplot(121)
+plt.subplot(121) #Return a subplot axes at the given grid position.
 plot_decision_boundary(tree_clf, X, y)
 plt.title("Decision Tree", fontsize=14)
 plt.subplot(122)
 plot_decision_boundary(bag_clf, X, y)
 plt.title("Decision Trees with Bagging", fontsize=14)
 save_fig("decision_tree_without_and_with_bagging_plot")
-plt.show()      
+plt.show()    
+
+#-------------------
+# Random Forests
+#-------------------
+bag_clf = BaggingClassifier(DecisionTreeClassifier(splitter="random", max_leaf_nodes=16, random_state=42), n_estimators=500, max_samples=1.0, bootstrap=True, n_jobs=-1, random_state=42)
+bag_clf.fit(X_train, y_train)
+y_pred = bag_clf.predict(X_test)
+
+from sklearn.ensemble import RandomForestClassifier
+
+rnd_clf = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1, random_state=42)
+rnd_clf.fit(X_train, y_train)
+y_pred_rf = rnd_clf.predict(X_test)
+np.sum(y_pred == y_pred_rf)/len(y_pred)
