@@ -183,10 +183,109 @@ plt.show()
 bag_clf = BaggingClassifier(DecisionTreeClassifier(splitter="random", max_leaf_nodes=16, random_state=42), n_estimators=500, max_samples=1.0, bootstrap=True, n_jobs=-1, random_state=42)
 bag_clf.fit(X_train, y_train)
 y_pred = bag_clf.predict(X_test)
+y_pred
 
 from sklearn.ensemble import RandomForestClassifier
 
 rnd_clf = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1, random_state=42)
 rnd_clf.fit(X_train, y_train)
 y_pred_rf = rnd_clf.predict(X_test)
+X_test
+y_pred_rf
 np.sum(y_pred == y_pred_rf)/len(y_pred)
+
+from sklearn.datasets import load_iris
+iris = load_iris()
+iris
+iris["feature_names"]
+rnd_clf = RandomForestClassifier(n_estimators=500, n_jobs=-1, random_state=42)
+rnd_clf.fit(iris["data"], iris["target"])
+for name, score in zip(iris["feature_names"], rnd_clf.feature_importances_):
+    print(name, score)
+
+rnd_clf.feature_importances_ 
+
+
+import matplotlib
+import matplotlib.pyplot as plt 
+
+plt.figure(figsize=(6,4)) 
+
+for i in range(16):
+    tree_clf = DecisionTreeClassifier(max_leaf_nodes=16, random_state=42+i)
+    indices_with_replacement = np.random.randint(0, len(X_train), len(X_train))
+    tree_clf.fit(X[indices_with_replacement], y[indices_with_replacement])
+    plot_decision_boundary(tree_clf, X, y, axes=[-1.5, 2.5, -1, 1.5], alpha=0.02, contour=False)
+
+plt.show()    
+
+#------------------------
+# Out-of-Bag evaluation
+#------------------------
+X, y = make_moons(n_samples=500, noise=0.30, random_state=42) #make_moons : make two interleaving half circles, a simple dataset to visualize clustering and classification algorithm 
+X
+y
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+bag_clf = BaggingClassifier(DecisionTreeClassifier(random_state=42), n_estimators=500, bootstrap=True, n_jobs=-1, oob_score=True, random_state=40)
+bag_clf.fit(X_train, y_train)
+bag_clf.oob_score_
+bag_clf.oob_decision_function_
+
+from sklearn.metrics import accuracy_score
+y_pred = bag_clf.predict(X_test)
+accuracy_score(y_test, y_pred)
+
+#---------------------
+# Feature importance
+#---------------------
+"""
+# on Mac, following code didn't work 
+from sklearn.datasets import fetch_mldata
+mnist = fetch_mldata('MNIST original')
+mnist
+"""
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets.mldata import fetch_mldata
+import tempfile
+test_data_home = tempfile.mkdtemp()
+
+mnist = fetch_mldata('MNIST original', data_home=test_data_home)
+mnist 
+
+rnd_clf = RandomForestClassifier(random_state=42)
+rnd_clf.fit(mnist["data"], mnist["target"])
+
+import matplotlib
+import matplotlib.pyplot as plt 
+
+def plot_digit(data) : 
+    image = data.reshape(28, 28)
+    plt.imshow(image, cmap=matplotlib.cm.hot, interpolation="nearest")
+    plt.axis("off")
+
+plot_digit(rnd_clf.feature_importances_)
+
+cbar = plt.colorbar(ticks=[rnd_clf.feature_importances_.min(), rnd_clf.feature_importances_.max()])
+cbar.ax.set_yticklabels(['Not important', 'Very important'])
+save_fig("mnist_feature_importance_plot")
+plt.show()
+
+#------------
+# AdaBoost
+#------------
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import make_moons
+import numpy as np
+
+X, y = make_moons(n_samples=500, noise=0.30, random_state=42) #make_moons : make two interleaving half circles, a simple dataset to visualize clustering and classification algorithm 
+X
+y
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+ada_clf = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), n_estimators=200, algorithm="SAMME.R", learning_rate=0.5, random_state=42)
+ada_clf.fit(X_train, y_train)
+plot_decision_boundary(ada_clf, X, y)
