@@ -334,6 +334,19 @@ tree_reg3 = DecisionTreeRegressor(max_depth=2, random_state=42)
 tree_reg3.fit(X, y3)
 
 X_new = np.array([[0.8]])
-
 y_pred = sum(tree.predict(X_new) for tree in (tree_reg1, tree_reg2, tree_reg3))
 y_pred
+
+def plot_predictions(regressors, X, y, axes, label=None, style="r-", data_style="b.", data_label=None):
+    x1 = np.linspace(axes[0], axes[1], 500)
+    y_pred = sum(regressor.predict(x1.reshape(-1,1)) for regressor in regressors)
+    plt.plot(X[:, 0], y, data_style, label=data_label)
+    plt.plot(x1, y_pred, style, linewidth=2, label=label)
+    if label or data_label:
+        plt.legend(loc="upper center", fontsize=16)
+    plt.axis(axes)
+
+plt.subplot(321)
+plot_predictions([tree_reg1], X, y, axes=[-0.5, 0.5, -0.1, 0.8], label="$h_1(x_1)$", style="g-", data_label="Training set")
+plt.ylabel("$y$", fontsize=16, rotation=0)
+plt.title("Residuals and tree predictions", fontsize=16)    
