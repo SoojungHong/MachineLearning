@@ -289,3 +289,51 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 ada_clf = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), n_estimators=200, algorithm="SAMME.R", learning_rate=0.5, random_state=42)
 ada_clf.fit(X_train, y_train)
 plot_decision_boundary(ada_clf, X, y)
+
+m = len(X_train)
+m
+plt.figure(figsize=(11,4))
+for subplot, learning_rate in ((121,1), (122,0.5)):
+    sample_weights = np.ones(m) #Return a new array of given shape and type, filled with ones.
+    print(sample_weights)
+    for i in range(5):
+        plt.subplots(subplot) #subplot(nrows, ncols, index, **kwargs), it nrows, ncols and index can be concatenated as 1,2,1 to 121
+        svm_clf = SVC(kernel="rbf", C=0.05, random_state=42)
+        svm_clf.fit(X_train, y_train, sample_weight=sample_weights)
+        y_pred = svm_clf.predict(X_train)
+        sample_weights[y_pred != y_train] *= (1 + learning_rate) #here, give more weights on instances 
+        plot_decision_boundary(svm_clf, X, y, alpha=0.2)
+        plt.title("learning_rate = {}".format(learning_rate), fontsize=16)
+    
+plt.subplot(121)
+plt.text(-0.7, -0.65, "1", fontsize=14)
+plt.text(-0.6, -0.10, "2", fontsize=14)
+plt.text(-0.5, 0.10, "3", fontsize=14)
+plt.text(-0.4, 0.55, "4", fontsize=14)
+plt.text(-0.3, 0.90, "5", fontsize=14)
+save_fig("boosting_plot")
+plt.show()  
+
+#---------------------
+# Gradient Boosting 
+#---------------------
+np.random.seed(42)
+X = np.random.rand(100, 1) - 0.5
+y = 3*X[:, 0]**2 + 0.05 * np.random.randn(100)  
+
+from sklearn.tree import DecisionTreeRegressor
+
+tree_reg1 = DecisionTreeRegressor(max_depth=2, random_state=42)
+tree_reg1.fit(X, y)
+y2 = y - tree_reg1.predict(X)
+tree_reg2 = DecisionTreeRegressor(max_depth=2, random_state=42)
+tree_reg2.fit(X, y2) #y2 is the difference between label y and predicted y 
+
+y3 = y2 - tree_reg2.predict(X)
+tree_reg3 = DecisionTreeRegressor(max_depth=2, random_state=42)
+tree_reg3.fit(X, y3)
+
+X_new = np.array([[0.8]])
+
+y_pred = sum(tree.predict(X_new) for tree in (tree_reg1, tree_reg2, tree_reg3))
+y_pred
