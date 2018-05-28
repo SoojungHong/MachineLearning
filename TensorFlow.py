@@ -67,6 +67,7 @@ with tf.Session() as sess:
 #------------------------------------
 # Linear Regression with TensorFlow
 #------------------------------------
+"""
 !!!!!!!!!!!!!! ERROR !!!!!!!!!!!!!!!!
 import numpy as np
 from sklearn.datasets import fetch_california_housing #error to import
@@ -82,7 +83,7 @@ theta = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(XT, X)), XT), y)
 
 with tf.Session() as sess:
     theta_value = theta.eval()
-    
+"""   
 
 #--------------------------------
 # Implementing Gradient Descent
