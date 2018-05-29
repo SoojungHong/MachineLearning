@@ -67,8 +67,3 @@ with tf.Session() as sess:
 #------------------------------------
 # Linear Regression with TensorFlow
 #------------------------------------
- 
-
-#--------------------------------
-# Implementing Gradient Descent
-#--------------------------------    
