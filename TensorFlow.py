@@ -128,3 +128,82 @@ with tf.Session() as sess:
 
 print("Best theta:")
 print(best_theta)    
+
+#-----------------
+# Using autodiff
+#-----------------
+import tensorflow as tf
+tf.reset_default_graph()
+
+n_epochs = 100
+learning_rate = 0.01
+
+X = tf.constant(scaled_housing_data_plus_bias, dtype=tf.float32, name="X")
+y = tf.constant(housing.target.reshape(-1,1), dtype=tf.float32, name="y")
+theta = tf.Variable(tf.random_uniform([n+1,1], -1.0, 1.0, seed=42), name="theta")
+y_pred = tf.matmul(X, theta, name="predictions")
+error = y_pred - y
+mse = tf.reduce_mean(tf.square(error), name="mse")
+gradients = tf.gradients(mse, [theta])[0]
+training_op = tf.assign(theta, theta - learning_rate * gradients)
+init = tf.global_variables_initializer() 
+
+with tf.Session() as sess:
+    sess.run(init)
+    
+    for epoch in range(n_epochs):
+        if epoch % 100 == 0:
+            print("Epoch", epoch, "MSE = ", mse.eval())
+        sess.run(training_op)
+    
+    best_theta = theta.eval()
+
+print("Best theta:")
+print(best_theta)   
+
+#------------------------------------------
+# Feeding data to the training algorithm 
+#------------------------------------------
+import tensorflow as tf
+import numpy as np
+
+A = tf.placeholder(tf.float32, shape=(None, 3))
+B = A + 5
+with tf.Session() as sess: 
+    B_val_1 = B.eval(feed_dict={A: [[1,2,3]]})
+    B_val_2 = B.eval(feed_dict={A: [[4,5,6], [7,8,9]]})
+    
+print(B_val_1)    
+print(B_val_2) 
+
+# Mini-batch Gradient Descent
+X = tf.placeholder(tf.float32, shape=(None, n+1), name="X")
+y = tf.placeholder(tf.float32, shape=(None, 1), name="y")
+
+batch_size = 100
+n_batches = int(np.ceil(m/batch_size))
+
+def fetch_batch(epoch, batch_index, batch_size):
+    return X_batch, y_batch
+
+with tf.Session() as sess:
+    sess.run(init)
+    
+    for epoch in range(n_epochs):
+        for batch_index in range(n_batches):
+            X_batch, y_batch = fetch_batch(epoch, batch_index, batch_size)
+            sess.run(training_op, feed_dict={X: X_batch, y:y_batch})
+    
+    best_theta = theta.eval()        
+
+
+#--------------------------------
+# Visualize graph within Jupyter 
+#--------------------------------
+from tensorflow_graph_in_jupyter import show_graph
+show_graph(tf.get_default_graph())   
+
+
+#-------------------------
+# Using TensorBoard
+#------------------------- 
